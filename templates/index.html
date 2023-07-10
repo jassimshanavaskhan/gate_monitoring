@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Gate Cameras</title>
+    <style>
+      /* Navbar styles */
+      .navbar {
+        background: linear-gradient(to right, #4f80e1, #7845d5);
+        padding: 10px;
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+      }
+
+
+      /* Main container styles */
+      .container {
+        max-width: 80%;
+        margin: 0 auto;
+      }
+
+      /* Gate section styles */
+      .gate-section {
+        background: linear-gradient(to bottom right, #f7f7f7, #e8e8e8);
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        position: relative;
+      }
+
+      /* Gate video styles */
+      .gate-videos {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 20px;
+      }
+
+      .gate-video {
+        width: calc(20% - 10px); /* Adjust the width of each video container */
+        margin-bottom: 20px;
+      }
+
+      .gate-video .video-container {
+        position: relative;
+        width: 100%;
+        padding-bottom: 75%; /* Set the aspect ratio (16:9) */
+      }
+
+      .gate-video .video-container .video-content {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .gate-video .video-container .video-content img {
+        object-fit: cover;
+        width: 100%;
+        height: 100%;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Overall counts styles */
+      .overall-counts {
+        text-align: center;
+        margin-bottom: 20px;
+        position: absolute;
+        top: 10px;
+        right: 30px;
+        font-size: 24px;
+        font-weight: bold;
+        color: #7845d5;
+      }
+
+
+      .total-counts {
+        text-align: center;
+        margin-bottom: 20px;
+        left: 10px;
+        font-size: 24px;
+        font-weight: bold;
+        color: #7845d5;
+      }
+
+      
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      // Function to handle SSE
+      function handleSSE() {
+        const eventSource = new EventSource('/count_stream');
+        eventSource.onmessage = function (event) {
+          const counts = JSON.parse(event.data);
+          updateCounts(counts);
+        };
+      }
+
+      // Function to update the counts in the HTML
+      function updateCounts(counts) {
+        const totalCounts = counts.reduce(function (acc, count) {
+          acc.in_count += count.in_count;
+          acc.out_count += count.out_count;
+          acc.total_count += count.total_count;
+          return acc;
+        }, { in_count: 0, out_count: 0, total_count: 0 });
+
+        const inCountElement = document.getElementById('in-count');
+        const outCountElement = document.getElementById('out-count');
+        const totalElement = document.getElementById('total-count');
+
+        inCountElement.textContent = totalCounts.in_count;
+        outCountElement.textContent = totalCounts.out_count;
+        totalElement.textContent = totalCounts.total_count;
+      }
+
+      // Function to start the SSE when the page loads
+      $(document).ready(function () {
+        handleSSE();
+      });
+    </script>
+  </head>
+  <body class="body">
+    <nav class="navbar">
+      <div class="container">
+        <h1>Gate Cameras</h1>
+      </div>
+    </nav>
+
+    <div class="container">
+      <section class="gate-section">
+        <h2>In Gates</h2>
+        <div class="gate-videos">
+          {% for i in range(num_gates) %}
+          <div class="gate-video">
+            <div class="video-container">
+              <div class="video-content">
+                <img src="{{ url_for('video_feed', gate_type='in', gate_index=i) }}" alt="In Gate {{ i }}">
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="overall-counts">
+          <p>In Count: <span id="in-count"></span></p>
+        </div>
+      </section>
+
+      <section class="gate-section">
+        <h2>Out Gates</h2>
+        <div class="gate-videos">
+          {% for i in range(num_gates) %}
+          <div class="gate-video">
+            <div class="video-container">
+              <div class="video-content">
+                <img src="{{ url_for('video_feed', gate_type='out', gate_index=i) }}" alt="Out Gate {{ i }}">
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="overall-counts">
+          <p>Out Count: <span id="out-count"></span></p>
+        </div>
+      </section>
+
+      <div class="total-counts">
+        <!-- <h2>Overall Counts</h2> -->
+        <h2>Total Count: <span id="total-count"></span></h2>
+      </div>
+    </div>
+  </body>
+</html>

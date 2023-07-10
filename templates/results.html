@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Video Processing Results</title>
+  </head>
+  <body>
+    <h1>Video Processing Results</h1>
+    <h2>Video: {{ video_path }}</h2>
+    <ul>
+      {% for i, count in enumerate(gate_counters) %}
+      <li>Gate {{ i + 1 }}: {{ count }} people</li>
+      {% endfor %}
+    </ul>
+  </body>
+</html>
